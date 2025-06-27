@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ghép đội</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Thư viện hiệu ứng -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.1/dist/fireworks.js"></script>
+
+  <!-- Font hiện đại -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="background-wrapper">
+    <div class="bg-layer" id="bg1"></div>
+    <div class="bg-layer" id="bg2"></div>
+  </div>
+
+  <h1>ME BADMINTON TOURNAMENT 2025</h1>
+  <button id="start-btn">Start</button>
+
+  <div class="slot-container">
+    <div class="name-slot"><div class="slot-inner" id="tier1-slot"></div></div>
+    <div class="name-slot"><div class="slot-inner" id="tier2-slot"></div></div>
+  </div>
+
+  <div id="overlay"></div>
+  <div id="popup-team"></div>
+  <div id="team-list"></div>
+
+  <div id="group-form" style="display:none;">
+    <form method="POST" action="/assign_groups">
+      <label>Số bảng:</label>
+      <input type="number" name="num_groups" min="1" required>
+      <button type="submit">Chia bảng</button>
+    </form>
+  </div>
+
+  <!-- ✅ Dữ liệu danh sách đội -->
+  <script id="teams-data" type="application/json">
+    {{ teams|tojson|safe }}
+  </script>
+
+  <!-- ✅ Script chính -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

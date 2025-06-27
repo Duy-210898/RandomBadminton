@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Kết quả chia bảng</title>
+
+  <!-- Font và thư viện -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='group_result.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+  <!-- NỀN CHUYỂN ĐỘNG -->
+  <div id="background-wrapper">
+    <div class="bg-layer" id="bg1"></div>
+    <div class="bg-layer" id="bg2"></div>
+  </div>
+
+  <!-- OVERLAY mở đầu -->
+  <div id="overlay"></div>
+
+  <!-- TIÊU ĐỀ -->
+  <h1>GROUP STAGE DRAW</h1>
+
+  <!-- DANH SÁCH BẢNG -->
+  <div id="tables-container" class="tables-container">
+    {% for group_name, team_list in groups.items() %}
+      <div class="table-box group-box">
+        <h2>{{ group_name }}</h2>
+        <ul></ul> <!-- JS sẽ thêm đội vào -->
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- NÚT ĐIỀU KHIỂN -->
+  <div style="margin: 30px 0;">
+    <button id="next-team-btn">Start Stage Draw</button>
+    <button id="schedule-btn">Match Schedule</button>
+  </div>
+
+  <!-- LỊCH THI ĐẤU -->
+  <div id="schedule-container" style="display: none; margin-top: 40px;">
+    <h1 style="color: #ffffff;">MATCH SCHEDULE</h1>
+
+    <!-- ✅ Sử dụng lại class tables-container để hiển thị ngang -->
+    <div id="schedule-tables" class="tables-container"></div>
+  </div>
+
+  <!-- TRUYỀN DỮ LIỆU TỪ SERVER -->
+  <script id="groupdata" type="application/json">
+    {{ groups|tojson|safe }}
+  </script>
+
+  <script id="scheduledata" type="application/json">
+    {{ schedule|tojson|safe }}
+  </script>
+
+  <!-- SCRIPT XỬ LÝ -->
+  <script src="{{ url_for('static', filename='group_result.js') }}"></script>
+</body>
+</html>

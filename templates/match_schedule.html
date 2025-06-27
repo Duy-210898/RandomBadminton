@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Lịch thi đấu</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='match_schedule.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="background-wrapper">
+    <div class="bg-layer" id="bg1"></div>
+    <div class="bg-layer" id="bg2"></div>
+  </div>
+
+  <h1>LỊCH THI ĐẤU VÒNG BẢNG</h1>
+
+  <div id="tables-container">
+    {% for group_name, matches in schedule.items() %}
+      <div class="table-box">
+        <h2>{{ group_name }}</h2>
+        <ul>
+          {% for team1, team2 in matches %}
+            <li>{{ team1 }} 🆚 {{ team2 }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
+  <script src="{{ url_for('static', filename='match_schedule.js') }}"></script>
+
+</body>
+</html>
