@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lịch thi đấu</title>
+  <title>Match Schedule</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='match_schedule.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+  <a href="{{ url_for('main.index') }}" class="home-btn" title="Back to Home">
+    <span class="icon">🏠</span>
+    <span class="text">Home</span>
+  </a>
+
   <div id="background-wrapper">
     <div class="bg-layer" id="bg1"></div>
     <div class="bg-layer" id="bg2"></div>
   </div>
 
-  <h1>LỊCH THI ĐẤU VÒNG BẢNG</h1>
+  <h1>GROUP STAGE MATCH SCHEDULE</h1>
 
   <div id="tables-container">
     {% for group_name, matches in schedule.items() %}
@@ -26,7 +31,7 @@
       </div>
     {% endfor %}
   </div>
-  <script src="{{ url_for('static', filename='match_schedule.js') }}"></script>
 
+  <script src="{{ url_for('static', filename='match_schedule.js') }}"></script>
 </body>
 </html>

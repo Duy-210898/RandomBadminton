@@ -1,0 +1,227 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right, #f7f9fb, #eef1f5);
+  margin: 0;
+  padding: 40px 20px;
+  color: #333;
+  font-size: 16px; /* ✅ tăng mặc định font size */
+}
+
+h2 {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 40px;
+  color: #2c3e50;
+}
+
+.standings-row,
+.scores-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 30px;
+  justify-content: center;
+  overflow-x: auto;
+  margin-bottom: 40px;
+  padding-bottom: 10px;
+}
+
+.group-box {
+  background: rgba(255, 255, 255, 0.7); 
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 400px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+.group-box:hover {
+  transform: translateY(-4px);
+}
+
+.group-box h3,
+.group-box h4 {
+  margin: 0 0 15px;
+  color: #2c3e50;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+  font-size: 18px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: rgba(250, 250, 250, 0.85); /* ✅ bảng nền mờ nhẹ */
+  backdrop-filter: blur(2px);
+}
+
+th {
+  background-color: #3498db;
+  color: white;
+  font-weight: 600;
+  padding: 10px;
+  font-size: 15px;
+}
+
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+  font-size: 15px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.top-team {
+  background-color: #dff0d8 !important;
+  font-weight: bold;
+}
+
+.match-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  
+  gap: 12px;
+  margin-top: 10px;
+}
+
+
+.match-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  background-color: rgba(245, 248, 250, 0.9); /* ✅ nền mờ nhẹ */
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  color: #34495e;
+  position: relative;
+}
+
+.match-box input[type="number"] {
+  width: 50px;
+  padding: 6px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 15px;
+}
+
+.match-box.loading {
+  opacity: 0.6;
+}
+
+.match-box::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #3498db;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+
+.match-box.loading::after {
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#background-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.bg-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+.bg-layer.active {
+  opacity: 1;
+}
+
+form button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  font-size: 17px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+form button:hover {
+  background-color: #27ae60;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .standings-row, .scores-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .group-box {
+    min-width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .match-box {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+}
+.home-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.home-btn:hover {
+  background: #ffffff;
+  color: #000;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  transform: translateY(-2px);
+}
+
+.home-btn .icon {
+  font-size: 18px;
+}
+
+.home-btn .text {
+  font-size: 14px;
+}

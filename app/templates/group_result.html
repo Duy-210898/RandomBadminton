@@ -1,53 +1,58 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kết quả chia bảng</title>
+  <title>Group Draw Result</title>
 
-  <!-- Font và thư viện -->
+  <!-- Fonts and Libraries -->
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='group_result.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
-  <!-- NỀN CHUYỂN ĐỘNG -->
+  <a href="{{ url_for('main.index') }}" class="home-btn" title="Back to home">
+    <span class="icon">🏠</span>
+    <span class="text">Home</span>
+  </a>
+
+  <!-- BACKGROUND ANIMATION -->
   <div id="background-wrapper">
     <div class="bg-layer" id="bg1"></div>
     <div class="bg-layer" id="bg2"></div>
   </div>
 
-  <!-- OVERLAY mở đầu -->
+  <!-- OPENING OVERLAY -->
   <div id="overlay"></div>
 
-  <!-- TIÊU ĐỀ -->
+  <!-- TITLE -->
   <h1>GROUP STAGE DRAW</h1>
 
-  <!-- DANH SÁCH BẢNG -->
+  <!-- GROUP LIST -->
   <div id="tables-container" class="tables-container">
     {% for group_name, team_list in groups.items() %}
       <div class="table-box group-box">
         <h2>{{ group_name }}</h2>
-        <ul></ul> <!-- JS sẽ thêm đội vào -->
+        <ul></ul> <!-- Teams will be inserted by JS -->
       </div>
     {% endfor %}
   </div>
 
-  <!-- NÚT ĐIỀU KHIỂN -->
+  <!-- CONTROL BUTTONS -->
   <div style="margin: 30px 0;">
     <button id="next-team-btn">Start Stage Draw</button>
-    <button id="schedule-btn">Match Schedule</button>
+    <button id="schedule-btn">View Match Schedule</button>
   </div>
 
-  <!-- LỊCH THI ĐẤU -->
+  <!-- MATCH SCHEDULE -->
   <div id="schedule-container" style="display: none; margin-top: 40px;">
     <h1 style="color: #ffffff;">MATCH SCHEDULE</h1>
 
-    <!-- ✅ Sử dụng lại class tables-container để hiển thị ngang -->
+    <!-- ✅ Reuse table-container for horizontal layout -->
     <div id="schedule-tables" class="tables-container"></div>
   </div>
 
-  <!-- TRUYỀN DỮ LIỆU TỪ SERVER -->
+  <!-- DATA FROM SERVER -->
   <script id="groupdata" type="application/json">
     {{ groups|tojson|safe }}
   </script>
@@ -56,7 +61,7 @@
     {{ schedule|tojson|safe }}
   </script>
 
-  <!-- SCRIPT XỬ LÝ -->
+  <!-- JS SCRIPT -->
   <script src="{{ url_for('static', filename='group_result.js') }}"></script>
 </body>
 </html>

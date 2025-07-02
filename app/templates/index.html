@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Badminton Tournament</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: url('/static/background2.jpg') center/cover no-repeat fixed;
+      margin: 0;
+      padding: 60px 20px;
+      min-height: 100vh;
+      color: #333;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .form-container, .list-container {
+      background: rgba(255, 255, 255, 0.9);
+      width: 100%;
+      max-width: 600px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin: 12px 0 6px;
+      color: #37474f;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .counter {
+      font-size: 14px;
+      color: #607d8b;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 24px;
+      background: #0288d1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #0277bd;
+    }
+
+    .error {
+      color: #d32f2f;
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background: #ffffff;
+      margin: 12px 0;
+      padding: 16px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    li:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    a.tournament-link {
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      display: block;
+    }
+
+    a.tournament-link:hover {
+      color: #3498db;
+    }
+    .status {
+        font-size: 0.9em;
+        font-weight: 500;
+        }
+
+        .status.complete {
+        color: green;
+        }
+
+        .status.in-progress {
+        color: orange;
+        }
+
+        /* Có thể thêm các trạng thái khác nếu có */
+        .status.canceled {
+        color: red;
+        }
+
+  </style>
+</head>
+<body>
+
+  <!-- 🟡 FORM: Enter Player List -->
+  <div class="form-container">
+    <h1>Enter Player List</h1>
+    <form method="POST">
+      <label>Tier 1 (one player per line):</label>
+      <textarea name="tier1" id="tier1" required></textarea>
+      <div class="counter">Tier 1 Count: <span id="count1">0</span></div>
+
+      <label>Tier 2 (must match Tier 1):</label>
+      <textarea name="tier2" id="tier2" required></textarea>
+      <div class="counter">Tier 2 Count: <span id="count2">0</span></div>
+
+      <button type="submit">Generate Teams</button>
+    </form>
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+  </div>
+
+    <!-- 🔵 TOURNAMENT LIST -->
+    <div class="list-container">
+    <h1>Tournament List</h1>
+    <ul>
+        {% for tournament in tournaments %}
+        <li>
+            <a class="tournament-link" href="{{ url_for('main.view_tournament', tournament_id=tournament.id) }}">
+            {{ tournament.name }}
+            <span class="status {{ tournament.status|lower|replace(' ', '-') }}">
+                ({{ tournament.status }})
+            </span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    </div>
+  <script>
+    const tier1 = document.getElementById('tier1');
+    const tier2 = document.getElementById('tier2');
+    const count1 = document.getElementById('count1');
+    const count2 = document.getElementById('count2');
+
+    function updateCount(textarea, counter) {
+      const lines = textarea.value.split('\n').filter(line => line.trim() !== '');
+      counter.textContent = lines.length;
+    }
+
+    tier1.addEventListener('input', () => updateCount(tier1, count1));
+    tier2.addEventListener('input', () => updateCount(tier2, count2));
+  </script>
+</body>
+</html>

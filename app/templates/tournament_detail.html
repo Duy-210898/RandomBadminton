@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ tournament.name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='tournament_detail.css') }}">
+</head>
+<body>
+  <a href="{{ url_for('main.index') }}" class="home-btn" title="Back to Home">
+    <span class="icon">🏠</span>
+    <span class="text">Home</span>
+  </a>
+
+  <div id="background-wrapper">
+    <div class="bg-layer" id="bg1"></div>
+    <div class="bg-layer" id="bg2"></div>
+  </div>
+
+  <h2>{{ tournament.name }}</h2>
+
+  <!-- Group Standings -->
+  <div class="standings-row">
+    {% for group in tournament.groups %}
+      <div class="group-box">
+        <h3>{{ group.name }}</h3>
+        <h4>Standings</h4>
+        <table data-group-id="{{ group.id }}">
+          <thead>
+            <tr>
+              <th>Team</th>
+              {% for i in range(max_matches) %}
+                <th>Match {{ i + 1 }}</th>
+              {% endfor %}
+              <th>Total Points</th>
+              <th>Goal Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in standings[group.name] %}
+              <tr>
+                <td>{{ row.name }}</td>
+                {% for pt in row.match_points %}
+                  <td>{{ pt }}</td>
+                {% endfor %}
+                <td>{{ row.total_points }}</td>
+                <td>{{ row.gd }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Match Results Input -->
+  <div class="scores-row">
+    {% for group in tournament.groups %}
+      <div class="group-box">
+        <h4>Enter Scores – {{ group.name }}</h4>
+        <div class="match-row">
+          {% for match in group.matches %}
+            <div class="match-box">
+              <span>{{ match.team1 }}</span>
+              <input type="number" class="score-input" data-id="{{ match.id }}" value="{{ match.score1 or '' }}">
+              <span>-</span>
+              <input type="number" class="score-input" data-id="{{ match.id }}" value="{{ match.score2 or '' }}">
+              <span>{{ match.team2 }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Show button to generate knock-out if all matches are completed -->
+  {% set all_filled = true %}
+  {% for group in tournament.groups %}
+    {% for match in group.matches %}
+      {% if match.score1 is none or match.score2 is none %}
+        {% set all_filled = false %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% if all_filled %}
+    <form action="{{ url_for('main.generate_knockout', tournament_id=tournament.id) }}" method="POST" style="text-align: center; margin-top: 30px;">
+      <button type="submit">🚀 NEXT ROUND</button>
+    </form>
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='tournament_detail.js') }}"></script>
+</body>
+</html>
