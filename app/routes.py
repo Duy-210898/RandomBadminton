@@ -13,6 +13,7 @@ main = Blueprint("main", __name__)
 @main.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
+        tournament_name = request.form.get("tournament_name", "").strip()
         raw_tier1 = request.form.get("tier1", "")
         raw_tier2 = request.form.get("tier2", "")
         tier1 = [x.strip() for x in raw_tier1.split("\n") if x.strip()]
@@ -22,10 +23,8 @@ def index():
             tournaments = Tournament.query.order_by(Tournament.created_at.desc()).all()
             return render_template("index.html", error="Tier 1 and Tier 2 must have the same number of players.", tournaments=tournaments)
 
-        random.shuffle(tier1)
-        random.shuffle(tier2)
-        combined = list(zip(tier1, tier2))
-        session["teams"] = combined
+        session["teams"] = list(zip(tier1, tier2))
+        session["tournament_name"] = tournament_name or datetime.now().strftime("Tournament %d/%m/%Y")
         return redirect(url_for("main.show_teams"))
 
     # Lấy danh sách giải để hiển thị sidebar + trạng thái
@@ -116,11 +115,16 @@ def assign_groups():
 
     db.session.commit()
 
-    # Lấy dữ liệu để render
-    result_groups = {g.name: [(t.tier1, t.tier2) for t in g.teams] for g in group_objs}
-    schedule = {}
-    for g in group_objs:
-        schedule[g.name] = [(m.team1, m.team2) for m in g.matches]
+    # Lấy dữ liệu để render sau khi tất cả đã được commit
+    result_groups = {
+        g.name: [(t.tier1, t.tier2) for t in Team.query.filter_by(group_id=g.id).order_by(Team.id).all()]
+        for g in group_objs
+    }
+
+    schedule = {
+        g.name: [(m.team1, m.team2) for m in Match.query.filter_by(group_id=g.id).order_by(Match.id).all()]
+        for g in group_objs
+    }
 
     return render_template("group_result.html", groups=result_groups, schedule=schedule)
 
@@ -296,6 +300,30 @@ def get_final_ranking(tournament_id):
         ranking.append({"rank": 8, "name": loser(seventh)})
 
     return sorted(ranking, key=lambda x: x["rank"])
+
+from flask import request
+
+@main.route("/clear_db")
+def clear_database():
+    # ✅ Xác thực đơn giản qua query param
+    token = request.args.get("token")
+    if token != "210898":  # Đổi thành token bạn chọn
+        return "❌ Không có quyền.", 403
+
+    try:
+        from .models import Match, Team, Group, Tournament
+
+        # Xóa theo thứ tự tránh ràng buộc khóa ngoại
+        Match.query.delete()
+        Team.query.delete()
+        Group.query.delete()
+        Tournament.query.delete()
+        db.session.commit()
+
+        return "✅ Đã xóa toàn bộ dữ liệu trong database."
+    except Exception as e:
+        db.session.rollback()
+        return f"❌ Lỗi khi xóa: {e}", 500
 
 @main.route("/tournament/<int:tournament_id>/knockout", methods=["GET", "POST"])
 def view_knockout_bracket(tournament_id):

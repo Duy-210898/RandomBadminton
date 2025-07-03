@@ -20,12 +20,12 @@
     }
 
     .form-container, .list-container {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.92);
       width: 100%;
       max-width: 600px;
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
 
     h1 {
@@ -33,6 +33,7 @@
       color: #2c3e50;
       margin-bottom: 30px;
       font-family: 'Inter', sans-serif;
+      font-weight: 700;
     }
 
     label {
@@ -42,14 +43,18 @@
       color: #37474f;
     }
 
-    textarea {
+    input[type="text"], textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px 14px;
       font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 8px;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
       resize: vertical;
+      box-sizing: border-box;
+    }
+
+    textarea {
       min-height: 100px;
     }
 
@@ -62,21 +67,21 @@
 
     button {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       font-size: 16px;
-      margin-top: 24px;
-      background: #0288d1;
+      margin-top: 28px;
+      background: linear-gradient(135deg, #0288d1, #01579b);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.15);
       transition: background 0.3s ease;
     }
 
     button:hover {
-      background: #0277bd;
+      background: linear-gradient(135deg, #0277bd, #01497c);
     }
 
     .error {
@@ -117,37 +122,39 @@
     a.tournament-link:hover {
       color: #3498db;
     }
+
     .status {
-        font-size: 0.9em;
-        font-weight: 500;
-        }
+      font-size: 0.9em;
+      font-weight: 500;
+    }
 
-        .status.complete {
-        color: green;
-        }
+    .status.complete {
+      color: green;
+    }
 
-        .status.in-progress {
-        color: orange;
-        }
+    .status.in-progress {
+      color: orange;
+    }
 
-        /* Có thể thêm các trạng thái khác nếu có */
-        .status.canceled {
-        color: red;
-        }
-
+    .status.canceled {
+      color: red;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 🟡 FORM: Enter Player List -->
+  <!-- 🟡 FORM: Create Tournament -->
   <div class="form-container">
-    <h1>Enter Player List</h1>
+    <h1>Create Tournament</h1>
     <form method="POST">
-      <label>Tier 1 (one player per line):</label>
+      <label for="tournament_name">Tournament Name:</label>
+      <input type="text" name="tournament_name" id="tournament_name" placeholder="e.g., Internal Cup 2025">
+
+      <label for="tier1">Tier 1 (one player per line):</label>
       <textarea name="tier1" id="tier1" required></textarea>
       <div class="counter">Tier 1 Count: <span id="count1">0</span></div>
 
-      <label>Tier 2 (must match Tier 1):</label>
+      <label for="tier2">Tier 2 (must match Tier 1):</label>
       <textarea name="tier2" id="tier2" required></textarea>
       <div class="counter">Tier 2 Count: <span id="count2">0</span></div>
 
@@ -158,22 +165,23 @@
     {% endif %}
   </div>
 
-    <!-- 🔵 TOURNAMENT LIST -->
-    <div class="list-container">
+  <!-- 🔵 TOURNAMENT LIST -->
+  <div class="list-container">
     <h1>Tournament List</h1>
     <ul>
-        {% for tournament in tournaments %}
-        <li>
-            <a class="tournament-link" href="{{ url_for('main.view_tournament', tournament_id=tournament.id) }}">
-            {{ tournament.name }}
-            <span class="status {{ tournament.status|lower|replace(' ', '-') }}">
-                ({{ tournament.status }})
-            </span>
-            </a>
-        </li>
-        {% endfor %}
+      {% for tournament in tournaments %}
+      <li>
+        <a class="tournament-link" href="{{ url_for('main.view_tournament', tournament_id=tournament.id) }}">
+          {{ tournament.name }}
+          <span class="status {{ tournament.status|lower|replace(' ', '-') }}">
+            ({{ tournament.status }})
+          </span>
+        </a>
+      </li>
+      {% endfor %}
     </ul>
-    </div>
+  </div>
+
   <script>
     const tier1 = document.getElementById('tier1');
     const tier2 = document.getElementById('tier2');
@@ -188,5 +196,6 @@
     tier1.addEventListener('input', () => updateCount(tier1, count1));
     tier2.addEventListener('input', () => updateCount(tier2, count2));
   </script>
+
 </body>
 </html>

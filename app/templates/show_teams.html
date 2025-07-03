@@ -38,11 +38,13 @@
 
   <div id="group-form" style="display:none;">
     <form method="POST" action="/assign_groups">
+      <input type="hidden" name="tournament_name" value="{{ session['tournament_name'] }}">
       <label>Number of groups:</label>
       <input type="number" name="num_groups" min="1" required>
       <button type="submit">Assign Groups</button>
     </form>
   </div>
+  <div id="fireworks-container"></div>
 
   <!-- ✅ Team data from server -->
   <script id="teams-data" type="application/json">

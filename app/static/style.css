@@ -362,6 +362,14 @@ canvas#fireworks {
   transition: all 0.3s ease;
   z-index: 999;
 }
+#fireworks-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
 
 .home-btn:hover {
   background: #ffffff;
