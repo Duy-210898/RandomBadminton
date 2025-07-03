@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: random-badminton
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        value: <DATABASE_URL_HERE>
