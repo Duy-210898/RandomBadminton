@@ -87,8 +87,9 @@ document.querySelectorAll('.score-input').forEach((input, index, inputs) => {
 function updateFinalRanking(ranking, championName) {
   if (!Array.isArray(ranking)) return;
 
-  // ✅ Cập nhật bảng xếp hạng
   const table = document.querySelector(".final-ranking tbody");
+  const container = document.getElementById("final-ranking-container");
+
   if (table) {
     table.innerHTML = "";
     ranking.forEach(row => {
@@ -98,24 +99,26 @@ function updateFinalRanking(ranking, championName) {
     });
   }
 
+  // ✅ Hiển thị container nếu đang ẩn
+  if (container) {
+    container.style.display = "block";
+  }
+
   // ✅ Hiển thị overlay đội vô địch
   const overlay = document.getElementById("champion-overlay");
   const nameElem = document.getElementById("overlay-champion-name");
 
-  // Debug tạm
-  console.log("⚠️ championName từ backend:", championName);
-  console.log("✅ DOM overlay:", overlay);
-  console.log("✅ DOM nameElem:", nameElem);
-
   if (overlay && nameElem && championName) {
-    nameElem.textContent = championName.toUpperCase(); // viết hoa toàn bộ
-
+    nameElem.textContent = championName.toUpperCase();
     overlay.style.display = "flex";
 
-    launchFireworks(); // canvas-confetti
+    launchFireworks();
 
     setTimeout(() => {
       overlay.style.display = "none";
+      if (container) {
+        container.style.display = "block";
+      }
     }, 6000);
   }
 }

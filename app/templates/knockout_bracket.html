@@ -127,23 +127,16 @@
 
 
 <!-- Final Ranking -->
-<div id="final-ranking-container">
-  {% if final_ranking %}
+<div id="final-ranking-container" style="margin-top: 40px;">
   <h2>Final Rankings</h2>
   <table class="final-ranking">
     <thead>
       <tr><th>Rank</th><th>Team</th></tr>
     </thead>
     <tbody>
-    {% for row in final_ranking %}
-    <tr>
-      <td>{{ row.rank }}</td>
-      <td>{{ row.name }}</td>
-    </tr>
-    {% endfor %}
+      <!-- JavaScript sẽ điền dữ liệu -->
     </tbody>
-  </table>  
-  {% endif %}
+  </table>
 </div>
 <div id="champion-overlay">
   <div class="fireworks-container" id="fireworks"></div>

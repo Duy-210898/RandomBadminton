@@ -322,6 +322,9 @@ th {
   opacity: 0.9;
   animation: explode 1.2s ease-out forwards;
 }
+#final-ranking-container {
+  display: none;
+}
 
 /* ======== RESPONSIVE ======== */
 @media (max-width: 768px) {
