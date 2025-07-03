@@ -382,56 +382,66 @@ def update_score():
     match.score2 = score2
     db.session.commit()
 
+    def is_finished(m):
+        return m.score1 is not None and m.score2 is not None and m.score1 != m.score2
+
+    def get_winner(m):
+        if not is_finished(m):
+            return "Đang chờ"
+        return m.team1 if m.score1 > m.score2 else m.team2
+
+    def get_loser(m):
+        if not is_finished(m):
+            return "Đang chờ"
+        return m.team2 if m.score1 > m.score2 else m.team1
+
     # === Nếu là knock-out ===
     if match.group_id is None:
         tournament = match.tournament
         matches = Match.query.filter_by(tournament_id=tournament.id, group_id=None).order_by(Match.id).all()
 
-        def get_winner(m): return m.team1 if m.score1 > m.score2 else m.team2
-        def get_loser(m): return m.team2 if m.score1 > m.score2 else m.team1
-
         updated = []
         try:
             idx = matches.index(match)
 
-            if idx == 0:  # upper 1
-                matches[4].team1 = get_winner(match)
-                matches[5].team1 = get_loser(match)
-                updated += [matches[4], matches[5]]
-            elif idx == 1:  # upper 2
-                matches[4].team2 = get_winner(match)
-                matches[5].team2 = get_loser(match)
-                updated += [matches[4], matches[5]]
-            elif idx == 2:  # lower 1
-                matches[6].team1 = get_winner(match)
-                matches[7].team1 = get_loser(match)
-                updated += [matches[6], matches[7]]
-            elif idx == 3:  # lower 2
-                matches[6].team2 = get_winner(match)
-                matches[7].team2 = get_loser(match)
-                updated += [matches[6], matches[7]]
+            if len(matches) >= 8:
+                if idx == 0:  # upper 1
+                    matches[4].team1 = get_winner(match)
+                    matches[5].team1 = get_loser(match)
+                    updated += [matches[4], matches[5]]
+                elif idx == 1:  # upper 2
+                    matches[4].team2 = get_winner(match)
+                    matches[5].team2 = get_loser(match)
+                    updated += [matches[4], matches[5]]
+                elif idx == 2:  # lower 1
+                    matches[6].team1 = get_winner(match)
+                    matches[7].team1 = get_loser(match)
+                    updated += [matches[6], matches[7]]
+                elif idx == 3:  # lower 2
+                    matches[6].team2 = get_winner(match)
+                    matches[7].team2 = get_loser(match)
+                    updated += [matches[6], matches[7]]
 
             db.session.commit()
         except Exception as e:
-            print("Lỗi cập nhật trận kế tiếp:", e)
+            print("❌ Lỗi cập nhật trận kế tiếp:", e)
 
-        # Nếu là trận chung kết (index 7), xác định đội vô địch và xếp hạng
-        final_winner = None
+        # ✅ Chỉ tính xếp hạng khi đủ 8 trận knock-out
         final_ranking = []
-        final_match = matches[4]
-        if final_match.score1 is not None and final_match.score2 is not None and final_match.score1 != final_match.score2:
-            final_winner = get_winner(final_match)
+        champion_name = None
 
-        final_ranking = [
-            {"rank": 1, "name": get_winner(matches[4])},  # ✅ Chung kết là match[4]
-            {"rank": 2, "name": get_loser(matches[4])},
-            {"rank": 3, "name": get_winner(matches[5])},
-            {"rank": 4, "name": get_loser(matches[5])},
-            {"rank": 5, "name": get_winner(matches[6])},
-            {"rank": 6, "name": get_loser(matches[6])},
-            {"rank": 7, "name": get_winner(matches[7])},
-            {"rank": 8, "name": get_loser(matches[7])},
-        ]
+        if len(matches) >= 8 and all(is_finished(m) for m in matches[4:8]):
+            final_ranking = [
+                {"rank": 1, "name": get_winner(matches[4])},
+                {"rank": 2, "name": get_loser(matches[4])},
+                {"rank": 3, "name": get_winner(matches[5])},
+                {"rank": 4, "name": get_loser(matches[5])},
+                {"rank": 5, "name": get_winner(matches[6])},
+                {"rank": 6, "name": get_loser(matches[6])},
+                {"rank": 7, "name": get_winner(matches[7])},
+                {"rank": 8, "name": get_loser(matches[7])},
+            ]
+            champion_name = get_winner(matches[4])
 
         return {
             "status": "ok",
@@ -446,7 +456,7 @@ def update_score():
                 }
                 for m in updated
             ],
-            "champion": final_winner,
+            "champion": champion_name,
             "final_ranking": final_ranking
         }
 
