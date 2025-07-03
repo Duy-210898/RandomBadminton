@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
+from sqlalchemy import text
 import os
 
 db = SQLAlchemy()
@@ -37,9 +38,8 @@ def create_app():
         from .models import Tournament, Group, Team, Match
         db.create_all()
 
-        # Kiểm tra kết nối DB
         try:
-            db.session.execute("SELECT 1")
+            db.session.execute(text("SELECT 1"))
             print("✅ Đã kết nối database thành công.")
         except Exception as e:
             print(f"❌ Lỗi kết nối database: {e}")
