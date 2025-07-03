@@ -8,5 +8,15 @@ services:
     envVars:
       - key: FLASK_ENV
         value: production
-      - key: DATABASE_URL
-        value: <DATABASE_URL_HERE>
+
+      # Đây là internal database URL (dành cho Render sử dụng nội bộ)
+      - key: DATABASE_INTERNAL_URL
+        value: postgresql://cps_db_user:7bEpwOCr0jdrFqaWTnmX3JHSeWpMOq1v@dpg-d1ifiaumcj7s738r7kf0-a/cps_db
+
+      # Đánh dấu đang chạy trên Render
+      - key: RENDER
+        value: true
+
+      # Flask secret key
+      - key: SECRET_KEY
+        value: your-secret-key
