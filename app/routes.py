@@ -6,9 +6,8 @@ from datetime import datetime
 
 main = Blueprint("main", __name__)
 
-
 # ====================================
-# BƯỚC 1: NHẬP DANH SÁCH & GHÉP ĐỘI
+# BƯỚC 1: NHẬP DANH SÁCH & LƯU TÊN GIẢI
 # ====================================
 @main.route("/", methods=["GET", "POST"])
 def index():
@@ -20,24 +19,25 @@ def index():
         tier2 = [x.strip() for x in raw_tier2.split("\n") if x.strip()]
 
         if len(tier1) != len(tier2):
-            tournaments = Tournament.query.order_by(Tournament.created_at.desc()).all()
-            return render_template("index.html", error="Tier 1 and Tier 2 must have the same number of players.", tournaments=tournaments)
+            tournaments = Tournament.query.order_by(Tournament.id.desc()).all()
+            return render_template("index.html", error="Tier 1 và Tier 2 phải cùng số lượng.", tournaments=tournaments)
 
-        session["teams"] = list(zip(tier1, tier2))
+        random.shuffle(tier1)
+        random.shuffle(tier2)
+        combined = list(zip(tier1, tier2))
+        session["teams"] = combined
+
+        # ✅ Lưu tên giải vào session
         session["tournament_name"] = tournament_name or datetime.now().strftime("Tournament %d/%m/%Y")
+
         return redirect(url_for("main.show_teams"))
 
-    # Lấy danh sách giải để hiển thị sidebar + trạng thái
+    # Hiển thị danh sách các giải đấu
     tournaments = Tournament.query.order_by(Tournament.name).all()
     tournament_list = []
-
     for t in tournaments:
         knockout_matches = Match.query.filter_by(tournament_id=t.id, group_id=None).all()
-        if knockout_matches and all(m.score1 is not None and m.score2 is not None for m in knockout_matches):
-            status = "Complete"
-        else:
-            status = "In Progress"
-
+        status = "Complete" if knockout_matches and all(m.score1 is not None and m.score2 is not None for m in knockout_matches) else "In Progress"
         tournament_list.append({
             "id": t.id,
             "name": t.name,
@@ -46,6 +46,7 @@ def index():
         })
 
     return render_template("index.html", tournaments=tournament_list)
+
 # ====================================
 # BƯỚC 2: HIỂN THỊ DANH SÁCH GHÉP ĐỘI
 # ====================================
@@ -55,67 +56,91 @@ def show_teams():
     return render_template("show_teams.html", teams=teams)
 
 
-# ====================================
-# BƯỚC 3: CHIA BẢNG & XẾP LỊCH
-# ====================================
 @main.route("/assign_groups", methods=["POST"])
 def assign_groups():
-    tournament_name = request.form.get("tournament_name", "").strip()
+    from .models import Tournament, Group, Team, Match
 
+    tournament_name = session.get("tournament_name", "").strip()
     if not tournament_name:
         tournament_name = datetime.now().strftime("Tournament %d/%m/%Y")
 
-    num_groups = int(request.form.get("num_groups"))
-    teams = list(session.get("teams", []))
-    random.shuffle(teams)
+    num_groups = int(request.form.get("num_groups", 0))
+    original_teams = list(session.get("teams", []))
+    if num_groups <= 0 or not original_teams:
+        return "❌ Dữ liệu không hợp lệ.", 400
 
-    # Tạo giải đấu mới
+    # ✅ Shuffle đội
+    random.shuffle(original_teams)
+
+    # ✅ Tạo giải đấu
     tournament = Tournament(name=tournament_name)
     db.session.add(tournament)
     db.session.commit()
 
-    # Tạo Group
+    # ✅ Tạo bảng A, B, C,...
     group_objs = []
     for i in range(num_groups):
-        group_name = f"Group {chr(65 + i)}"
-        group = Group(name=group_name, tournament=tournament)
+        group = Group(name=f"Group {chr(65 + i)}", tournament=tournament)
         db.session.add(group)
         group_objs.append(group)
-
     db.session.commit()
 
-    # Thêm Team vào từng Group
-    for idx, team in enumerate(teams):
+    # ✅ Gán đội theo bảng và gom theo group.name (không dùng id sớm)
+    teams_by_group = {group.name: [] for group in group_objs}
+
+    for idx, (tier1, tier2) in enumerate(original_teams):
         group = group_objs[idx % num_groups]
-        t = Team(tier1=team[0], tier2=team[1], name=f"{team[0]} – {team[1]}", group=group)
-        db.session.add(t)
+        team = Team(
+            tier1=tier1,
+            tier2=tier2,
+            name=f"{tier1} – {tier2}",
+            group=group
+        )
+        db.session.add(team)
+        teams_by_group[group.name].append(team)
 
-    db.session.commit()
+    db.session.commit()  # Lúc này team.group_id sẽ chính xác 100%
+    # ✅ In danh sách đội theo bảng ra console
+    for group_name, team_list in teams_by_group.items():
+        print(f"\n📌 {group_name}:")
+        for t in team_list:
+            print(f"   - {t.name}")
+    # ✅ Hàm sinh lịch vòng tròn
+    def round_robin(teams):
+        if len(teams) < 2:
+            return []
 
-    # Sinh lịch thi đấu vòng tròn
-    def round_robin(team_list):
-        matches = []
-        for i in range(len(team_list)):
-            for j in range(i + 1, len(team_list)):
-                matches.append((team_list[i], team_list[j]))
-        return matches
+        if len(teams) % 2 != 0:
+            teams.append(None)  # BYE
 
-    # Tạo Match
+        n = len(teams)
+        rounds = []
+        for _ in range(n - 1):
+            for i in range(n // 2):
+                t1, t2 = teams[i], teams[n - 1 - i]
+                if t1 and t2:
+                    rounds.append((t1, t2))
+            # Xoay
+            teams = [teams[0]] + [teams[-1]] + teams[1:-1]
+        return rounds
+
+    # ✅ Tạo trận đấu cho từng bảng
     for group in group_objs:
-        matches = round_robin(group.teams)
+        team_list = teams_by_group[group.name]
+        matches = round_robin(team_list)
         for team1, team2 in matches:
             match = Match(
                 group=group,
+                tournament=tournament,
                 team1=team1.name,
                 team2=team2.name,
                 score1=None,
                 score2=None
             )
             db.session.add(match)
-
     db.session.commit()
 
-    # Lấy dữ liệu để render sau khi tất cả đã được commit
+    # ✅ Render kết quả
     result_groups = {
         g.name: [(t.tier1, t.tier2) for t in Team.query.filter_by(group_id=g.id).order_by(Team.id).all()]
         for g in group_objs
@@ -127,7 +152,6 @@ def assign_groups():
     }
 
     return render_template("group_result.html", groups=result_groups, schedule=schedule)
-
 
 # ====================================
 # HIỂN THỊ DANH SÁCH CÁC GIẢI ĐẤU

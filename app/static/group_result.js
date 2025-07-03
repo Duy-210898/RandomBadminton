@@ -1,17 +1,23 @@
 const overlay = document.getElementById('overlay');
 const btn = document.getElementById('next-team-btn');
-const scheduleBtn = document.getElementById('schedule-btn'); // ✅ Khai báo đúng
+const scheduleBtn = document.getElementById('schedule-btn');
 
 const boxes = document.querySelectorAll('.group-box ul');
-let idx = 0;
-let groupIndex = 0;
 
 const groups = JSON.parse(document.getElementById("groupdata").textContent);
 const schedule = JSON.parse(document.getElementById("scheduledata").textContent);
 
-// ✅ Vô hiệu hóa nút "Lịch thi đấu" ban đầu
+// ✅ DỮ LIỆU nhóm đội (group name + list đội)
+const groupedTeams = Object.entries(groups);  // [ [groupName, [ [tier1, tier2], ... ]], ... ]
+let groupIndex = 0;
+let teamIndex = 0;
+let isComplete = false;
+
 scheduleBtn.disabled = true;
 
+// ======================
+// BACKGROUND CROSSFADE
+// ======================
 const bgImages = [
   "/static/background1.jpg",
   "/static/background2.jpg",
@@ -37,55 +43,61 @@ function crossfadeBackground() {
 }
 setInterval(crossfadeBackground, 10000);
 
-// Flatten team list
-const teams = [];
-Object.values(groups).forEach(group => {
-  group.forEach(team => teams.push(team));
-});
-
-// Overlay ban đầu
+// ======================
+// SỰ KIỆN NÚT
+// ======================
 overlay.style.display = 'block';
 let firstClick = true;
 
 btn.addEventListener('click', showNextTeam);
-
-// ✅ Không cho bấm nếu chưa chia bảng xong
-scheduleBtn.addEventListener("click", () => {
-  if (idx < teams.length) {
+scheduleBtn.addEventListener('click', () => {
+  if (!isComplete) {
     alert("⚠️ Bạn phải chia xong các đội trước khi hiển thị lịch thi đấu.");
     return;
   }
-  console.log("🔔 Match schedule button clicked");
   generateSchedule();
 });
 
+// ======================
+// HIỂN THỊ ĐỘI TIẾP THEO
+// ======================
 async function showNextTeam() {
-  if (idx >= teams.length) {
-    btn.disabled = true;
-    btn.textContent = "✅ Complete!";
-    
-    scheduleBtn.disabled = false;
-    return;
-  }
+  if (isComplete) return;
+
+  const [groupName, teamList] = groupedTeams[groupIndex];
+  const box = boxes[groupIndex];
 
   if (firstClick) {
     overlay.style.display = 'none';
     firstClick = false;
   }
 
-  const [tier1, tier2] = teams[idx];
-  const box = boxes[groupIndex % boxes.length];
+  if (teamIndex < teamList.length) {
+    const [tier1, tier2] = teamList[teamIndex];
+    await insertTeam(box, [tier1, tier2]);
+    teamIndex++;
+  } else {
+    groupIndex++;
+    teamIndex = 0;
+  }
 
-  await insertTeam(box, [tier1, tier2]);
+  if (groupIndex >= groupedTeams.length) {
+    btn.disabled = true;
+    btn.textContent = "✅ Complete!";
+    scheduleBtn.disabled = false;
+    isComplete = true;
+    return;
+  }
 
-  idx++;
-  groupIndex++;
   setTimeout(showNextTeam, 1000);
 }
 
+// ======================
+// HIỆU ỨNG HIỂN THỊ TỪNG ĐỘI
+// ======================
 function insertTeam(ul, team) {
   return new Promise((resolve) => {
-    const allNames = teams.flatMap(t => t);
+    const allNames = groupedTeams.flatMap(g => g[1]).flatMap(t => t);
     const totalFrames = 35;
     const li = document.createElement('li');
     li.className = 'team-effect';
@@ -132,7 +144,7 @@ function easeOutCubic(t) {
 }
 
 // ==============================
-// MATCH SCHEDULE HIỂN THỊ NGAY
+// HIỂN THỊ LỊCH THI ĐẤU VÒNG BẢNG
 // ==============================
 function generateSchedule() {
   const container = document.getElementById("schedule-tables");
@@ -153,7 +165,6 @@ function generateSchedule() {
     matches.forEach(([team1, team2], index) => {
       const li = document.createElement("li");
 
-      // Format đẹp: dùng span căn chỉnh rõ ràng
       li.innerHTML = `
         <span class="match-number">Trận ${index + 1}:</span>
         <span class="match-team">${team1}</span>
@@ -170,30 +181,4 @@ function generateSchedule() {
 
   scheduleBtn.disabled = true;
   btn.disabled = true;
-}
-
-function roundRobin(teams) {
-  const result = [];
-  const n = teams.length;
-  const isOdd = n % 2 !== 0;
-  const list = teams.slice();
-
-  if (isOdd) list.push(["BYE", ""]);
-
-  const totalRounds = list.length - 1;
-  for (let round = 0; round < totalRounds; round++) {
-    for (let i = 0; i < list.length / 2; i++) {
-      const t1 = list[i];
-      const t2 = list[list.length - 1 - i];
-      if (t1[0] !== "BYE" && t2[0] !== "BYE") {
-        result.push([
-          `${t1[0]} – ${t1[1]}`,
-          `${t2[0]} – ${t2[1]}`
-        ]);
-      }
-    }
-    const last = list.pop();
-    list.splice(1, 0, last);
-  }
-  return result;
 }
