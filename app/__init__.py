@@ -6,20 +6,28 @@ import os
 db = SQLAlchemy()
 
 def create_app():
-    load_dotenv()  # Tải biến môi trường từ file .env
+    # Chỉ load .env khi chạy local
+    if os.environ.get("RENDER") != "true":
+        load_dotenv()  # Load từ .env nếu có
 
     app = Flask(__name__)
     app.secret_key = os.getenv("SECRET_KEY", "fallback-secret")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+
+    # Ưu tiên dùng internal DB khi chạy trên Render
+    db_url = os.getenv("DATABASE_INTERNAL_URL") or os.getenv("DATABASE_URL")
+    if not db_url:
+        raise RuntimeError("❌ Thiếu DATABASE_URL hoặc DATABASE_INTERNAL_URL.")
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
 
-    # Import và đăng ký Blueprint
+    # Đăng ký Blueprint
     from .routes import main
     app.register_blueprint(main)
 
-    # Tạo bảng nếu chưa có (chỉ nên dùng cho dev/local)
+    # Khởi tạo bảng
     with app.app_context():
         from .models import Tournament, Group, Team, Match
         db.create_all()
