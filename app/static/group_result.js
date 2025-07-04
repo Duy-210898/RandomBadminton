@@ -62,34 +62,46 @@ scheduleBtn.addEventListener('click', () => {
 // HIỂN THỊ ĐỘI TIẾP THEO
 // ======================
 async function showNextTeam() {
-  if (isComplete) return;
+  if (isComplete || btn.disabled) return;
 
-  const [groupName, teamList] = groupedTeams[groupIndex];
-  const box = boxes[groupIndex];
+  btn.disabled = true;
 
   if (firstClick) {
     overlay.style.display = 'none';
     firstClick = false;
   }
 
+  const [groupName, teamList] = groupedTeams[groupIndex];
+  const box = boxes[groupIndex];
+
   if (teamIndex < teamList.length) {
     const [tier1, tier2] = teamList[teamIndex];
     await insertTeam(box, [tier1, tier2]);
     teamIndex++;
+
+    // ✅ Kiểm tra hoàn tất **sau khi xử lý đội cuối**
+    if (
+      groupIndex === groupedTeams.length - 1 &&
+      teamIndex === teamList.length
+    ) {
+      btn.disabled = true;
+      btn.textContent = "✅ Complete!";
+      scheduleBtn.disabled = false;
+      isComplete = true;
+      return;
+    }
+
+    setTimeout(() => {
+      btn.disabled = false;
+      showNextTeam(); // Tự động tiếp tục
+    }, 1000);
   } else {
+    // chuyển sang nhóm kế tiếp
     groupIndex++;
     teamIndex = 0;
+    btn.disabled = false;
+    showNextTeam(); // tiếp tục nhóm mới
   }
-
-  if (groupIndex >= groupedTeams.length) {
-    btn.disabled = true;
-    btn.textContent = "✅ Complete!";
-    scheduleBtn.disabled = false;
-    isComplete = true;
-    return;
-  }
-
-  setTimeout(showNextTeam, 1000);
 }
 
 // ======================
@@ -181,4 +193,10 @@ function generateSchedule() {
 
   scheduleBtn.disabled = true;
   btn.disabled = true;
+
+  // ✅ Hiển thị nút NEXT ROUND khi đã hiện lịch thi đấu
+  const nextRoundBtn = document.getElementById("next-round-container");
+  if (nextRoundBtn) {
+    nextRoundBtn.style.display = "block";
+  }
 }

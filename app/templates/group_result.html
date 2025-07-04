@@ -47,6 +47,13 @@
   <!-- MATCH SCHEDULE -->
   <div id="schedule-container" style="display: none; margin-top: 40px;">
     <h1 style="color: #ffffff;">MATCH SCHEDULE</h1>
+  <!-- NÚT TIẾN VÀO VÒNG KNOCK-OUT -->
+  <div id="next-round-container" style="display: none; text-align: center; margin-top: 30px;">
+    <a href="{{ url_for('main.view_tournament', tournament_id=tournament.id) }}" class="btn-next-round">
+      🚀 NEXT ROUND
+    </a>
+  </div>
+
 
     <!-- ✅ Reuse table-container for horizontal layout -->
     <div id="schedule-tables" class="tables-container"></div>

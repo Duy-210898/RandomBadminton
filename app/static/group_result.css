@@ -239,3 +239,31 @@ h1 {
 .home-btn .text {
   font-size: 14px;
 }
+.btn-next-round {
+  display: inline-block;
+  padding: 14px 32px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #00f0ff, #0077ff);
+  border: none;
+  border-radius: 12px;
+  text-decoration: none;
+  text-shadow: 1px 1px 2px #000;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 85, 255, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-next-round:hover {
+  background: linear-gradient(135deg, #0077ff, #00d4ff);
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.7), 0 0 60px rgba(0, 85, 255, 0.7), inset 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.btn-next-round:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}

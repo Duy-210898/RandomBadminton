@@ -151,7 +151,12 @@ def assign_groups():
         for g in group_objs
     }
 
-    return render_template("group_result.html", groups=result_groups, schedule=schedule)
+    return render_template(
+        "group_result.html",
+        groups=result_groups,
+        schedule=schedule,
+        tournament=tournament
+    )
 
 # ====================================
 # HIỂN THỊ DANH SÁCH CÁC GIẢI ĐẤU
