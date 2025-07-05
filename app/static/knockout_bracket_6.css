@@ -1,0 +1,338 @@
+/* ======== RESET & BASE ======== */
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #dbeafe, #fefce8);
+  margin: 0;
+  padding: 40px 20px;
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ======== TIÊU ĐỀ ======== */
+h2 {
+  text-align: center;
+  font-size: 64px;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: #ffffff;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.25), 0 0 10px #3b82f6;
+}
+h3 {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 20px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* ======== BACKGROUND ĐỘNG ======== */
+#background-wrapper {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  overflow: hidden;
+}
+.bg-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  transition: opacity 2s ease-in-out;
+  opacity: 0;
+}
+.bg-layer.active {
+  opacity: 1;
+}
+
+/* ======== BOX TRẬN ĐẤU ======== */
+.section {
+  margin: 40px auto;
+  max-width: 800px;
+  background: #ffffffee;
+  padding: 24px 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06), 0 0 8px rgba(147, 197, 253, 0.15);
+  transition: transform 0.3s, box-shadow 0.3s;
+  transform: scale(0.96);
+}
+.section:not(.final-match):hover {
+  transform: scale(1.01);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1), 0 0 12px rgba(147, 197, 253, 0.2);
+}
+.section.final-match {
+  background: linear-gradient(135deg, #fffbe6, #fff0c1);
+  border: 2px solid #f1c40f;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(241, 196, 15, 0.3), 0 0 10px rgba(250, 204, 21, 0.2);
+  max-width: 850px;
+  margin: 60px auto;
+  padding: 36px;
+  text-align: center;
+  animation: fadeInFinal 1s ease-in-out;
+}
+.section.final-match h3 {
+  font-size: 28px;
+  color: #b9770e;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+/* ======== INPUT TỈ SỐ ======== */
+input[type="number"] {
+  width: 55px;
+  text-align: center;
+  padding: 6px;
+  font-size: 16px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: all 0.2s;
+}
+input[type="number"]:focus {
+  border-color: #3b82f6;
+  background: #e0f2fe;
+  outline: none;
+}
+.section.final-match input[type="number"] {
+  width: 70px;
+  font-size: 20px;
+  background: #fffdf2;
+  border: 1px solid #f6c23e;
+  font-weight: bold;
+  padding: 8px;
+}
+
+/* ======== BẢNG CHUNG ======== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 16px;
+}
+th, td {
+  padding: 12px 16px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+th {
+  background: #f3f4f6;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* ======== BẢNG XẾP HẠNG CUỐI ======== */
+.final-ranking {
+  width: 100%;
+  max-width: 900px;
+  margin: 60px auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffffd9;
+  backdrop-filter: blur(4px);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 0 14px rgba(59, 130, 246, 0.15);
+  animation: fadeInRanking 1s ease-out;
+}
+
+.final-ranking thead {
+  background: linear-gradient(to right, #3b82f6, #60a5fa);
+}
+
+.final-ranking th {
+  color: #0e0e0e;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.final-ranking td {
+  padding: 14px 12px;
+  font-size: 15px;
+  color: #1f2937;
+  font-weight: 500;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.final-ranking tr:nth-child(even) {
+  background: #f9fafb;
+}
+.final-ranking tr:hover {
+  background: #f1f5f9;
+  transition: background 0.3s ease;
+}
+.final-ranking td:first-child { font-weight: 600; color: #111827; }
+.final-ranking td:last-child { font-weight: bold; color: #4b5563; }
+
+/* ======== CHAMPION OVERLAY ======== */
+#champion-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.99));
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  animation: fadeInChampion 0.6s ease-in-out;
+}
+.champion-popup {
+  text-align: center;
+  padding: 80px 50px;
+  border-radius: 32px;
+  background: linear-gradient(145deg, #fffbe6, #fff1bd, #fff9db);
+  box-shadow: 0 0 80px rgba(250, 204, 21, 0.6),
+              0 0 120px rgba(255, 255, 255, 0.2),
+              inset 0 0 30px rgba(255, 223, 0, 0.3);
+  animation: fadeInChampion 1.2s ease-in-out;
+  max-width: 980px;
+  width: 90%;
+  transform: scale(1.02);
+}
+.trophy-icon-large {
+  font-size: 120px;
+  margin-bottom: 30px;
+  animation: crownBounce 2s infinite ease-in-out;
+  color: #facc15;
+  text-shadow: 0 0 30px #facc15, 0 0 60px #fde047;
+}
+.champion-title {
+  font-size: 60px;
+  font-weight: 1000;
+  color: #ca8a04;
+  text-shadow: 4px 4px 8px #fff, 0 0 20px #facc15, 0 0 40px #fbbf24;
+  margin-bottom: 36px;
+  letter-spacing: 4px;
+  animation: glowPulse 1.5s infinite alternate;
+  text-transform: uppercase;
+}
+.champion-winner {
+  font-size: 72px;
+  font-weight: 1000;
+  color: #f59e0b;
+  letter-spacing: 5px;
+  text-shadow: 0 0 40px #facc15, 0 0 60px #fde047, 0 0 100px #fbbf24, 0 0 140px #f59e0b;
+  animation: flickerGlow 2.5s infinite alternate;
+  text-transform: uppercase;
+}
+
+/* ======== NÚT TRANG CHỦ ======== */
+.home-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px 14px;
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+.home-btn:hover {
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+.home-btn .icon { font-size: 18px; }
+.home-btn .text { font-size: 14px; }
+
+/* ======== ANIMATIONS ======== */
+@keyframes fadeInChampion {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeInFinal {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInRanking {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes glowPulse {
+  0%, 100% { text-shadow: 0 0 8px #fde047, 0 0 12px #facc15, 0 0 16px #fbbf24; }
+  50% { text-shadow: 0 0 14px #facc15, 0 0 20px #fbbf24, 0 0 26px #f59e0b; }
+}
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes flickerGlow {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 20px #facc15, 0 0 40px #fde047, 0 0 60px #fbbf24;
+  }
+  50% {
+    opacity: 0.92;
+    text-shadow: 0 0 40px #facc15, 0 0 70px #fde047, 0 0 90px #fbbf24;
+  }
+}
+@keyframes explode {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.5) translateY(-20px); opacity: 0; }
+}
+
+/* ======== PHÁO HOA ======== */
+.fireworks-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 9999;
+  pointer-events: none;
+}
+.firework {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  opacity: 0.9;
+  animation: explode 1.2s ease-out forwards;
+}
+#final-ranking-container {
+  display: none;
+}
+
+/* ======== RESPONSIVE ======== */
+@media (max-width: 768px) {
+  body { padding: 20px; font-size: 15px; }
+  h2 { font-size: 32px; }
+  .section { padding: 20px; }
+  .section.final-match { padding: 28px; }
+  input[type="number"] { width: 48px; font-size: 14px; }
+  .section.final-match input[type="number"] {
+    width: 60px;
+    font-size: 18px;
+  }
+  .final-ranking th, .final-ranking td {
+    font-size: 14px;
+    padding: 10px;
+  }
+  .champion-title { font-size: 36px; }
+  .champion-winner { font-size: 42px; }
+  .trophy-icon-large { font-size: 80px; }
+}

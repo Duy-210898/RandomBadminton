@@ -249,43 +249,54 @@ def view_tournament(tournament_id):
 @main.route("/tournament/<int:tournament_id>/generate_knockout", methods=["POST"])
 def generate_knockout(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
+
     existing_matches = Match.query.filter_by(tournament_id=tournament_id, group_id=None).count()
-    if existing_matches >= 8:
-        # Nếu đã tạo knock-out, thì không tạo lại mà hiển thị luôn
+    if existing_matches >= 3:  # đủ số trận tối thiểu
         return redirect(url_for("main.view_knockout_bracket", tournament_id=tournament_id))
 
+    # Lấy standings từng bảng
     standings = {}
     for group in tournament.groups:
         standings[group.name] = calculate_detailed_standings(group)
 
     group_names = sorted(standings.keys())
     if len(group_names) < 2:
-        return "Cần ít nhất 2 bảng", 400
+        return "❌ Cần ít nhất 2 bảng", 400
 
     A, B = group_names[0], group_names[1]
-
-    upper_pairs = [
-        (standings[A][0]['name'], standings[B][1]['name']),  # Nhất A vs Nhì B
-        (standings[B][0]['name'], standings[A][1]['name'])   # Nhất B vs Nhì A
-    ]
-
-    lower_pairs = [
-        (standings[A][2]['name'], standings[B][3]['name']),  # Ba A vs Bốn B
-        (standings[B][2]['name'], standings[A][3]['name'])   # Ba B vs Bốn A
-    ]
+    total_teams = sum(len(v) for v in standings.values())
 
     def add_match(t1, t2):
         m = Match(team1=t1, team2=t2, tournament=tournament)
         db.session.add(m)
         return m
 
-    upper = [add_match(t1, t2) for t1, t2 in upper_pairs]
-    lower = [add_match(t1, t2) for t1, t2 in lower_pairs]
+    if total_teams == 6:
+        # ✅ Trường hợp 6 đội: 3 trận
+        final = add_match(standings[A][0]['name'], standings[B][0]['name'])   # Nhất A vs Nhất B
+        third = add_match(standings[A][1]['name'], standings[B][1]['name'])   # Nhì A vs Nhì B
+        fifth = add_match(standings[A][2]['name'], standings[B][2]['name'])   # Ba A vs Ba B
+    elif total_teams == 8:
+        # ✅ Trường hợp 8 đội: chuẩn 8 trận knock-out
+        upper_pairs = [
+            (standings[A][0]['name'], standings[B][1]['name']),
+            (standings[B][0]['name'], standings[A][1]['name']),
+        ]
+        lower_pairs = [
+            (standings[A][2]['name'], standings[B][3]['name']),
+            (standings[B][2]['name'], standings[A][3]['name']),
+        ]
 
-    final = add_match("Winner Upper 1", "Winner Upper 2")
-    third = add_match("Loser Upper 1", "Loser Upper 2")
-    fifth = add_match("Winner Lower 1", "Winner Lower 2")
-    seventh = add_match("Loser Lower 1", "Loser Lower 2")
+        upper = [add_match(t1, t2) for t1, t2 in upper_pairs]
+        lower = [add_match(t1, t2) for t1, t2 in lower_pairs]
+
+        final = add_match("Winner Upper 1", "Winner Upper 2")
+        third = add_match("Loser Upper 1", "Loser Upper 2")
+        fifth = add_match("Winner Lower 1", "Winner Lower 2")
+        seventh = add_match("Loser Lower 1", "Loser Lower 2")
+
+    else:
+        return "❌ Hiện chỉ hỗ trợ knock-out cho giải 6 hoặc 8 đội.", 400
 
     db.session.commit()
     return redirect(url_for("main.view_knockout_bracket", tournament_id=tournament_id))
@@ -359,57 +370,93 @@ def view_knockout_bracket(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     matches = Match.query.filter_by(tournament_id=tournament_id, group_id=None).order_by(Match.id).all()
 
-    if len(matches) < 8:
-        return "Lỗi: Thiếu trận knock-out. Vui lòng tạo bằng chức năng 'Tạo knock-out'.", 400
+    def winner(m):
+        return m.team1 if m.score1 > m.score2 else m.team2 if m.score1 != m.score2 else m.team1
 
-    upper = matches[:2]
-    lower = matches[2:4]
-    final, third, fifth, seventh = matches[4:8]
+    def loser(m):
+        return m.team2 if m.score1 > m.score2 else m.team1 if m.score1 != m.score2 else m.team2
 
-    if request.method == "POST":
-        # Cập nhật tỉ số cho tất cả 8 trận
-        for m in matches:
-            s1 = request.form.get(f"score1_{m.id}")
-            s2 = request.form.get(f"score2_{m.id}")
-            if s1 is not None and s2 is not None and s1.isdigit() and s2.isdigit():
-                m.score1 = int(s1)
-                m.score2 = int(s2)
-        db.session.commit()
+    # ✅ Với 6 đội → có 3 trận: Final, Third, Fifth
+    if len(matches) == 3:
+        final, third, fifth = matches[:3]
 
-        def winner(m):
-            return m.team1 if m.score1 > m.score2 else m.team2 if m.score1 != m.score2 else m.team1
+        if request.method == "POST":
+            for m in matches:
+                s1 = request.form.get(f"score1_{m.id}")
+                s2 = request.form.get(f"score2_{m.id}")
+                if s1 is not None and s2 is not None and s1.isdigit() and s2.isdigit():
+                    m.score1 = int(s1)
+                    m.score2 = int(s2)
+            db.session.commit()
+            return redirect(url_for("main.view_knockout_bracket", tournament_id=tournament_id))
 
-        def loser(m):
-            return m.team2 if m.score1 > m.score2 else m.team1 if m.score1 != m.score2 else m.team2
+        # ✅ Tính xếp hạng khi đủ điểm
+        final_ranking = []
+        if all(m.score1 is not None and m.score2 is not None for m in matches):
+            final_ranking = [
+                {"rank": 1, "name": winner(final)},
+                {"rank": 2, "name": loser(final)},
+                {"rank": 3, "name": winner(third)},
+                {"rank": 4, "name": loser(third)},
+                {"rank": 5, "name": winner(fifth)},
+                {"rank": 6, "name": loser(fifth)},
+            ]
 
-        # Cập nhật trận chung kết
-        if upper[0].score1 is not None and upper[1].score1 is not None:
-            final.team1 = winner(upper[0])
-            final.team2 = winner(upper[1])
-            third.team1 = loser(upper[0])
-            third.team2 = loser(upper[1])
+        return render_template("knockout_bracket_6.html",
+            tournament=tournament,
+            final_match=final,
+            third_place_match=third,
+            fifth_place_match=fifth,
+            final_ranking=final_ranking
+        )
 
-        # Cập nhật hạng 5, 7
-        if lower[0].score1 is not None and lower[1].score1 is not None:
-            fifth.team1 = winner(lower[0])
-            fifth.team2 = winner(lower[1])
-            seventh.team1 = loser(lower[0])
-            seventh.team2 = loser(lower[1])
+    # ✅ Với 8 trận → xử lý như cũ
+    elif len(matches) == 8:
+        upper = matches[:2]
+        lower = matches[2:4]
+        final, third, fifth, seventh = matches[4:8]
 
-        db.session.commit()
-        return redirect(url_for("main.view_knockout_bracket", tournament_id=tournament_id))
-    final_ranking = get_final_ranking(tournament.id)
+        if request.method == "POST":
+            for m in matches:
+                s1 = request.form.get(f"score1_{m.id}")
+                s2 = request.form.get(f"score2_{m.id}")
+                if s1 is not None and s2 is not None and s1.isdigit() and s2.isdigit():
+                    m.score1 = int(s1)
+                    m.score2 = int(s2)
+            db.session.commit()
 
-    return render_template("knockout_bracket.html",
-        tournament=tournament,
-        upper_matches=upper,
-        lower_matches=lower,
-        final_match=final,
-        third_place_match=third,
-        fifth_place_match=fifth,
-        seventh_place_match=seventh,
-        final_ranking=final_ranking   # ✅ Thêm dòng này
-    )
+            # Cập nhật các trận tiếp theo
+            if upper[0].score1 is not None and upper[1].score1 is not None:
+                final.team1 = winner(upper[0])
+                final.team2 = winner(upper[1])
+                third.team1 = loser(upper[0])
+                third.team2 = loser(upper[1])
+
+            if lower[0].score1 is not None and lower[1].score1 is not None:
+                fifth.team1 = winner(lower[0])
+                fifth.team2 = winner(lower[1])
+                seventh.team1 = loser(lower[0])
+                seventh.team2 = loser(lower[1])
+
+            db.session.commit()
+            return redirect(url_for("main.view_knockout_bracket", tournament_id=tournament_id))
+
+        final_ranking = get_final_ranking(tournament.id)
+        return render_template("knockout_bracket.html",
+            tournament=tournament,
+            upper_matches=upper,
+            lower_matches=lower,
+            final_match=final,
+            third_place_match=third,
+            fifth_place_match=fifth,
+            seventh_place_match=seventh,
+            final_ranking=final_ranking
+        )
+
+    # ❌ Nếu số lượng trận không hợp lệ
+    return "Lỗi: Knock-out chưa được tạo hoặc số lượng trận không hợp lệ.", 400
+
+
 @main.route("/api/standings/<int:tournament_id>")
 def get_standings(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
@@ -456,12 +503,13 @@ def update_score():
     if match.group_id is None:
         tournament = match.tournament
         matches = Match.query.filter_by(tournament_id=tournament.id, group_id=None).order_by(Match.id).all()
-
         updated = []
+
         try:
             idx = matches.index(match)
 
             if len(matches) >= 8:
+                # 🔁 Giải 8 đội
                 if idx == 0:  # upper 1
                     matches[4].team1 = get_winner(match)
                     matches[5].team1 = get_loser(match)
@@ -480,14 +528,16 @@ def update_score():
                     updated += [matches[6], matches[7]]
 
             db.session.commit()
+
         except Exception as e:
             print("❌ Lỗi cập nhật trận kế tiếp:", e)
 
-        # ✅ Chỉ tính xếp hạng khi đủ 8 trận knock-out
+        # === Tính bảng xếp hạng cuối cùng ===
         final_ranking = []
         champion_name = None
 
         if len(matches) >= 8 and all(is_finished(m) for m in matches[4:8]):
+            # ✅ Giải 8 đội
             final_ranking = [
                 {"rank": 1, "name": get_winner(matches[4])},
                 {"rank": 2, "name": get_loser(matches[4])},
@@ -499,6 +549,19 @@ def update_score():
                 {"rank": 8, "name": get_loser(matches[7])},
             ]
             champion_name = get_winner(matches[4])
+
+        elif len(matches) == 3 and all(is_finished(m) for m in matches):
+            # ✅ Giải 6 đội
+            final, third, fifth = matches
+            final_ranking = [
+                {"rank": 1, "name": get_winner(final)},
+                {"rank": 2, "name": get_loser(final)},
+                {"rank": 3, "name": get_winner(third)},
+                {"rank": 4, "name": get_loser(third)},
+                {"rank": 5, "name": get_winner(fifth)},
+                {"rank": 6, "name": get_loser(fifth)},
+            ]
+            champion_name = get_winner(final)
 
         return {
             "status": "ok",
