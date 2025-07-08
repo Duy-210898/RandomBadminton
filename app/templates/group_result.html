@@ -11,6 +11,17 @@
 </head>
 
 <body>
+<div id="add-team-form">
+  <select id="group-select">
+    <option value="A">Bảng A</option>
+    <option value="B">Bảng B</option>
+    <option value="C">Bảng C</option>
+  </select>
+  <input type="text" id="tier1-name" placeholder="Đội Tier 1" />
+  <input type="text" id="tier2-name" placeholder="Đội Tier 2" />
+  <button id="add-team-btn">➕ Thêm cặp đội</button>
+</div>
+
   <a href="{{ url_for('main.index') }}" class="home-btn" title="Back to home">
     <span class="icon">🏠</span>
     <span class="text">Home</span>

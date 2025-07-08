@@ -139,6 +139,22 @@
     .status.canceled {
       color: red;
     }
+
+    .export-link {
+      font-size: 13px;
+      color: #3498db;
+      margin-left: 10px;
+    }
+
+    .delete-button {
+      margin-left: 10px;
+      background: #e74c3c;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -157,6 +173,10 @@
       <label for="tier2">Tier 2 (must match Tier 1):</label>
       <textarea name="tier2" id="tier2" required></textarea>
       <div class="counter">Tier 2 Count: <span id="count2">0</span></div>
+
+      <label for="fixed_teams">Fixed Teams (optional – one line: Tier1 - Tier2):</label>
+      <textarea name="fixed_teams" id="fixed_teams" placeholder="e.g. 🇻🇳 Vietnam - 🔥 Elite"></textarea>
+      <div class="counter">Fixed Count: <span id="count_fixed">0</span></div>
 
       <button type="submit">Generate Teams</button>
     </form>
@@ -177,6 +197,15 @@
             ({{ tournament.status }})
           </span>
         </a>
+
+        <!-- Export -->
+        <a href="{{ url_for('main.export_tournament', tournament_id=tournament.id) }}" class="export-link">📥 Export</a>
+
+        <!-- Delete -->
+        <form method="POST" action="{{ url_for('main.delete_tournament', tournament_id=tournament.id) }}"
+              style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xoá giải này?');">
+          <button type="submit" class="delete-button">🗑 Delete</button>
+        </form>
       </li>
       {% endfor %}
     </ul>
@@ -185,8 +214,10 @@
   <script>
     const tier1 = document.getElementById('tier1');
     const tier2 = document.getElementById('tier2');
+    const fixed = document.getElementById('fixed_teams');
     const count1 = document.getElementById('count1');
     const count2 = document.getElementById('count2');
+    const count_fixed = document.getElementById('count_fixed');
 
     function updateCount(textarea, counter) {
       const lines = textarea.value.split('\n').filter(line => line.trim() !== '');
@@ -195,6 +226,7 @@
 
     tier1.addEventListener('input', () => updateCount(tier1, count1));
     tier2.addEventListener('input', () => updateCount(tier2, count2));
+    fixed?.addEventListener('input', () => updateCount(fixed, count_fixed));
   </script>
 
 </body>

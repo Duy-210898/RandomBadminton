@@ -15,24 +15,45 @@ def index():
         tournament_name = request.form.get("tournament_name", "").strip()
         raw_tier1 = request.form.get("tier1", "")
         raw_tier2 = request.form.get("tier2", "")
+        raw_fixed = request.form.get("fixed_teams", "")
+
+        # Tách các dòng và loại bỏ khoảng trắng
         tier1 = [x.strip() for x in raw_tier1.split("\n") if x.strip()]
         tier2 = [x.strip() for x in raw_tier2.split("\n") if x.strip()]
 
-        if len(tier1) != len(tier2):
+        # Tách các cặp cố định: mỗi dòng là "A - B"
+        fixed_pairs = []
+        for line in raw_fixed.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            if "-" not in line:
+                return render_template("index.html", error="Dòng cố định không hợp lệ (thiếu dấu '-').")
+            left, right = line.split("-", 1)
+            fixed_pairs.append((left.strip(), right.strip()))
+
+        # Đảm bảo tier1 và tier2 có cùng số lượng (sau khi loại bỏ các cặp cố định)
+        num_t1 = len(tier1)
+        num_t2 = len(tier2)
+        if num_t1 != num_t2:
             tournaments = Tournament.query.order_by(Tournament.id.desc()).all()
             return render_template("index.html", error="Tier 1 và Tier 2 phải cùng số lượng.", tournaments=tournaments)
 
+        # Shuffle danh sách còn lại
         random.shuffle(tier1)
         random.shuffle(tier2)
-        combined = list(zip(tier1, tier2))
-        session["teams"] = combined
+        paired = list(zip(tier1, tier2))
 
-        # ✅ Lưu tên giải vào session
+        # Gộp cặp cố định lên trước, sau đó đến các cặp random
+        all_teams = fixed_pairs + paired
+
+        # Lưu vào session
+        session["teams"] = all_teams
         session["tournament_name"] = tournament_name or datetime.now().strftime("Tournament %d/%m/%Y")
 
         return redirect(url_for("main.show_teams"))
 
-    # Hiển thị danh sách các giải đấu
+    # GET: Hiển thị danh sách các giải đã tạo
     tournaments = Tournament.query.order_by(Tournament.name).all()
     tournament_list = []
     for t in tournaments:
@@ -600,3 +621,159 @@ def update_score():
         "standings": standings_data,
         "group_id": group.id
     }
+
+from flask import jsonify
+
+
+@main.route("/export_tournament/<int:tournament_id>")
+def export_tournament(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    groups = Group.query.filter_by(tournament_id=tournament.id).all()
+
+    data = {
+        "id": tournament.id,
+        "name": tournament.name,
+        "groups": []
+    }
+
+    for group in groups:
+        teams = Team.query.filter_by(group_id=group.id).all()
+        matches = Match.query.filter_by(group_id=group.id).all()
+
+        group_data = {
+            "name": group.name,
+            "teams": [team.name for team in teams],
+            "matches": [
+                {
+                    "team1": m.team1,
+                    "team2": m.team2,
+                    "score1": m.score1,
+                    "score2": m.score2
+                }
+                for m in matches
+            ]
+        }
+        data["groups"].append(group_data)
+
+    return jsonify(data)
+@main.route("/api/groups/add-justin-tuyen-fixed", methods=["POST"])
+def add_justin_tuyen_fixed():
+    group_id = 98
+    group = Group.query.get_or_404(group_id)
+
+    team = Team(name="Justin – Tuyen", tier1="Justin", tier2="Tuyen", group=group)
+    db.session.add(team)
+    db.session.commit()
+
+    return {
+        "status": "success",
+        "message": f"✅ Đã thêm đội Justin – Tuyen vào bảng {group.name} (ID: {group.id})."
+    }
+@main.route("/api/groups/<int:group_id>/regenerate-matches", methods=["POST"])
+def regenerate_group_matches(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    # ❌ Xóa tất cả trận cũ trong bảng này
+    Match.query.filter_by(group_id=group.id).delete()
+
+    teams = group.teams
+    if len(teams) < 2:
+        return {"status": "error", "message": "❌ Phải có ít nhất 2 đội."}, 400
+
+    # ✅ Tạo lại tất cả cặp trận vòng tròn
+    for i in range(len(teams)):
+        for j in range(i + 1, len(teams)):
+            m = Match(
+                group_id=group.id,
+                tournament_id=group.tournament_id,
+                team1=teams[i].name,
+                team2=teams[j].name,
+                score1=None,
+                score2=None
+            )
+            db.session.add(m)
+
+    db.session.commit()
+
+    return {
+        "status": "success",
+        "message": f"✅ Đã tạo {len(teams) * (len(teams) - 1) // 2} trận cho bảng {group.name}."
+    }
+@main.route("/api/tournament/rename-latest", methods=["POST"])
+def rename_latest_tournament():
+    latest_tournament = Tournament.query.order_by(Tournament.id.desc()).first()
+
+    if not latest_tournament:
+        return {"status": "error", "message": "❌ Không có tournament nào trong database."}, 404
+
+    latest_tournament.name = "Tournament Monday 14th Jul"
+    db.session.commit()
+
+    return {
+        "status": "success",
+        "message": f"✅ Đã đổi tên tournament cuối cùng thành: {latest_tournament.name}",
+        "id": latest_tournament.id
+    }
+@main.route("/api/reset-all-scores", methods=["POST"])
+def reset_all_scores():
+    try:
+        matches = Match.query.all()
+
+        if not matches:
+            return {"status": "error", "message": "❌ Không có trận nào trong hệ thống."}, 404
+
+        for match in matches:
+            match.score1 = None
+            match.score2 = None
+
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": f"✅ Đã đặt lại điểm cho toàn bộ {len(matches)} trận đấu trong hệ thống."
+        }
+
+    except Exception as e:
+        db.session.rollback()
+        return {"status": "error", "message": f"❌ Lỗi: {e}"}, 500
+@main.route("/api/rename-justin-tuyen", methods=["POST"])
+def rename_justin_tuyen():
+    team = Team.query.filter_by(name="Justin – Tuyen").first()
+
+    if not team:
+        return {
+            "status": "error",
+            "message": "❌ Không tìm thấy đội 'Justin – Tuyen'."
+        }, 404
+
+    team.name = "Nhân – Tuyền"
+    team.tier1 = "Nhân"
+    team.tier2 = "Tuyền"
+
+    db.session.commit()
+
+    return {
+        "status": "success",
+        "message": "✅ Đã đổi tên đội thành 'Nhân – Tuyền'."
+    }
+@main.route("/delete_tournament/<int:tournament_id>", methods=["POST"])
+def delete_tournament(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+
+    # ✅ Lấy danh sách group ID trước khi xóa
+    group_ids = [g.id for g in Group.query.filter_by(tournament_id=tournament.id).all()]
+
+    # ✅ Xóa Match trước
+    if group_ids:
+        Match.query.filter(Match.group_id.in_(group_ids)).delete(synchronize_session=False)
+        Team.query.filter(Team.group_id.in_(group_ids)).delete(synchronize_session=False)
+        Group.query.filter(Group.id.in_(group_ids)).delete(synchronize_session=False)
+
+    # ✅ Xóa các trận knockout nếu có (không thuộc group)
+    Match.query.filter_by(tournament_id=tournament.id).delete(synchronize_session=False)
+
+    # ✅ Cuối cùng mới xóa tournament
+    db.session.delete(tournament)
+    db.session.commit()
+
+    return redirect(url_for("main.index"))

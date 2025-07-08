@@ -82,3 +82,15 @@ h1 {
 .home-btn .text {
   font-size: 14px;
 }
+.match-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.matches-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* căn giữa theo chiều ngang */
+  padding: 20px;
+}

@@ -3,36 +3,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let groupIndex = 0;
 
-  function revealNextGroup() {
-    if (groupIndex >= boxes.length) return;
+function revealNextGroup() {
+  if (groupIndex >= boxes.length) return;
 
-    const box = boxes[groupIndex];
-    const items = box.querySelectorAll('li');
-    let itemIndex = 0;
+  const box = boxes[groupIndex];
+  const groupId = box.dataset.groupId;  // Lấy từ data-group-id
+  console.log(`📢 Hiển thị groupId: ${groupId}`);
 
-    function revealNextItem() {
-      if (itemIndex >= items.length) {
-        groupIndex++;
-        setTimeout(revealNextGroup, 800); // chuyển sang bảng kế tiếp sau 0.8s
-        return;
-      }
+  const items = box.querySelectorAll('li');
+  let itemIndex = 0;
 
-      const li = items[itemIndex];
-      li.style.opacity = 0;
-      li.style.transform = "translateY(-10px)";
-      li.classList.add('reveal-match');
-
-      setTimeout(() => {
-        li.style.opacity = 1;
-        li.style.transform = "translateY(0)";
-        li.style.transition = "all 0.5s ease";
-        itemIndex++;
-        setTimeout(revealNextItem, 300); // delay giữa các trận đấu trong 1 bảng
-      }, 50);
+  function revealNextItem() {
+    if (itemIndex >= items.length) {
+      groupIndex++;
+      setTimeout(revealNextGroup, 800);
+      return;
     }
 
-    revealNextItem();
+    const li = items[itemIndex];
+    li.style.opacity = 0;
+    li.style.transform = "translateY(-10px)";
+    li.classList.add('reveal-match');
+
+    setTimeout(() => {
+      li.style.opacity = 1;
+      li.style.transform = "translateY(0)";
+      li.style.transition = "all 0.5s ease";
+      itemIndex++;
+      setTimeout(revealNextItem, 300);
+    }, 50);
   }
+
+  revealNextItem();
+}
 
   revealNextGroup(); // Bắt đầu khi load
 });

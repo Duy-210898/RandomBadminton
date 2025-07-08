@@ -154,6 +154,38 @@ function insertTeam(ul, team) {
 function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
 }
+document.getElementById("add-team-btn").addEventListener("click", () => {
+  const groupName = document.getElementById("group-select").value;
+  const tier1 = document.getElementById("tier1-name").value.trim();
+  const tier2 = document.getElementById("tier2-name").value.trim();
+
+  if (!tier1 || !tier2) {
+    alert("⚠️ Vui lòng nhập đầy đủ tên 2 đội.");
+    return;
+  }
+
+  const groupIndex = groupedTeams.findIndex(g => g[0] === groupName);
+  if (groupIndex === -1) {
+    alert(`❌ Bảng ${groupName} không tồn tại.`);
+    return;
+  }
+
+  const teamList = groupedTeams[groupIndex][1];
+  teamList.push([tier1, tier2]);
+
+  // Hiển thị lên đúng bảng
+  const boxes = document.querySelectorAll('.group-box ul');
+  const box = boxes[groupIndex];
+
+  // Dùng lại hiệu ứng insertTeam
+  insertTeam(box, [tier1, tier2]);
+
+  // Reset input
+  document.getElementById("tier1-name").value = "";
+  document.getElementById("tier2-name").value = "";
+
+  alert(`✅ Đã thêm cặp: ${tier1} – ${tier2} vào bảng ${groupName}`);
+});
 
 // ==============================
 // HIỂN THỊ LỊCH THI ĐẤU VÒNG BẢNG

@@ -131,6 +131,20 @@ td {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+.match-box .team {
+  display: inline-block;
+  min-width: 120px;
+  text-align: right;
+}
+
+.match-box .team2 {
+  text-align: left;
+}
+
+.match-box .dash {
+  width: 12px;
+  text-align: center;
+}
 
 #background-wrapper {
   position: fixed;

@@ -60,11 +60,11 @@
         <div class="match-row">
           {% for match in group.matches %}
             <div class="match-box">
-              <span>{{ match.team1 }}</span>
-              <input type="number" class="score-input" data-id="{{ match.id }}" value="{{ match.score1 or '' }}">
-              <span>-</span>
-              <input type="number" class="score-input" data-id="{{ match.id }}" value="{{ match.score2 or '' }}">
-              <span>{{ match.team2 }}</span>
+            <span class="team team1">{{ match.team1 }}</span>
+            <input type="number" class="score-input" data-id="{{ match.id }}" value="{{ match.score1 or '' }}">
+            <span class="dash">–</span>
+            <input type="number" class="score-input" data-id="{{ match.id }}" value="{{ match.score2 or '' }}">
+            <span class="team team2">{{ match.team2 }}</span>
             </div>
           {% endfor %}
         </div>
